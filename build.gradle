@@ -1,4 +1,4 @@
-plugins { id 'net.fabricmc.fabric-loom-remap' version '1.13.5' }
+plugins { id 'fabric-loom' version '1.13.5' }
 group='com.matejpcs.netflared'
 version=project.findProperty('mod_version') ?: '0.1.4-SNAPSHOT'
 def mc=project.findProperty('minecraft_version') ?: '1.21.11'
