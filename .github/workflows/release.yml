@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v7
         with: { ref: 1.20.x }
       - uses: actions/setup-java@v6
-        with: { distribution: temurin, java-version: ${{ matrix.mc == '1.20' && '17' || '21' }} }
+        with: { distribution: temurin, java-version: "${{ matrix.mc == '1.20' && '17' || '21' }}" }
       - uses: gradle/actions/setup-gradle@v6
         with: { gradle-version: ${{ env.GRADLE_VERSION }} }
       - run: gradle clean build --no-daemon -Pmod_version="${{ inputs.release_version || '0.1.0' }}" -Pminecraft_version="${{ matrix.mc }}" -Ploader_version="${{ matrix.loader }}" -Pfabric_api_version="${{ matrix.api }}"
