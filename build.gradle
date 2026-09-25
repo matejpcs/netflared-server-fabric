@@ -1,0 +1,10 @@
+plugins { id 'net.fabricmc.fabric-loom-remap' version '1.6.12' }
+group='com.matejpcs.netflared'
+version=project.findProperty('mod_version') ?: '0.1.1-SNAPSHOT'
+def mc=project.findProperty('minecraft_version') ?: '1.20.6'
+def loader=project.findProperty('loader_version') ?: '0.15.11'
+def api=project.findProperty('fabric_api_version') ?: '0.98.0+1.20.6'
+java.toolchain.languageVersion=JavaLanguageVersion.of(21)
+dependencies { minecraft "com.mojang:minecraft:" + mc; mappings loom.officialMojangMappings(); modImplementation "net.fabricmc:fabric-loader:" + loader; modImplementation "net.fabricmc.fabric-api:fabric-api:" + api; implementation 'com.google.code.gson:gson:2.13.2' }
+processResources { inputs.property 'version',project.version; filesMatching('fabric.mod.json'){expand(version:project.version)} }
+tasks.withType(JavaCompile).configureEach { options.encoding='UTF-8'; options.release=21 }
