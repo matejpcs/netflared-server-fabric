@@ -1,6 +1,6 @@
 plugins { id 'net.fabricmc.fabric-loom' version '1.17.21' }
 group='com.matejpcs.netflared'
-version=project.findProperty('mod_version') ?: '0.1.9-SNAPSHOT'
+version=project.findProperty('mod_version') ?: '0.1.10-SNAPSHOT'
 def mc=project.findProperty('minecraft_version') ?: '26.2'
 def loader=project.findProperty('loader_version') ?: '0.19.3'
 def api=project.findProperty('fabric_api_version') ?: '0.154.0+26.2'
