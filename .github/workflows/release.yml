@@ -1,0 +1,154 @@
+name: Build & Release Fabric compatibility bundles
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: Netflared mod release version
+        required: true
+        default: "0.1.0"
+  push:
+    tags:
+      - "server-v*"
+
+permissions:
+  contents: write
+
+env:
+  GRADLE_VERSION: "9.7.1"
+
+jobs:
+  build-1-20:
+    name: Fabric 1.20.x / ${{ matrix.mc }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { mc: "1.20", loader: "0.14.21", api: "0.83.0+1.20" }
+          - { mc: "1.20.1", loader: "0.16.14", api: "0.92.12+1.20.1" }
+          - { mc: "1.20.2", loader: "0.16.14", api: "0.91.6+1.20.2" }
+          - { mc: "1.20.3", loader: "0.16.14", api: "0.91.1+1.20.3" }
+          - { mc: "1.20.4", loader: "0.16.14", api: "0.97.3+1.20.4" }
+          - { mc: "1.20.5", loader: "0.15.11", api: "0.97.8+1.20.5" }
+          - { mc: "1.20.6", loader: "0.15.11", api: "0.100.8+1.20.6" }
+    steps:
+      - uses: actions/checkout@v7
+        with: { ref: 1.20.x }
+      - uses: actions/setup-java@v6
+        with: { distribution: temurin, java-version: ${{ matrix.mc == '1.20' && '17' || '21' }} }
+      - uses: gradle/actions/setup-gradle@v6
+        with: { gradle-version: ${{ env.GRADLE_VERSION }} }
+      - run: gradle clean build --no-daemon -Pmod_version="${{ inputs.release_version || '0.1.0' }}" -Pminecraft_version="${{ matrix.mc }}" -Ploader_version="${{ matrix.loader }}" -Pfabric_api_version="${{ matrix.api }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: netflared-fabric-1.20-${{ matrix.mc }}
+          path: build/libs/*.jar
+          if-no-files-found: error
+
+  build-1-21:
+    name: Fabric 1.21.x / ${{ matrix.mc }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { mc: "1.21", loader: "0.16.14", api: "0.100.8+1.21" }
+          - { mc: "1.21.1", loader: "0.16.14", api: "0.115.6+1.21.1" }
+          - { mc: "1.21.2", loader: "0.16.14", api: "0.106.1+1.21.2" }
+          - { mc: "1.21.3", loader: "0.16.14", api: "0.114.1+1.21.3" }
+          - { mc: "1.21.4", loader: "0.16.14", api: "0.119.4+1.21.4" }
+          - { mc: "1.21.5", loader: "0.16.14", api: "0.128.0+1.21.5" }
+          - { mc: "1.21.6", loader: "0.17.0", api: "0.128.2+1.21.6" }
+          - { mc: "1.21.7", loader: "0.17.0", api: "0.129.0+1.21.7" }
+          - { mc: "1.21.8", loader: "0.17.2", api: "0.136.1+1.21.8" }
+          - { mc: "1.21.9", loader: "0.17.3", api: "0.134.0+1.21.9" }
+          - { mc: "1.21.10", loader: "0.17.3", api: "0.135.0+1.21.10" }
+          - { mc: "1.21.11", loader: "0.18.4", api: "0.141.1+1.21.11" }
+    steps:
+      - uses: actions/checkout@v7
+        with: { ref: 1.21.x }
+      - uses: actions/setup-java@v6
+        with: { distribution: temurin, java-version: "21" }
+      - uses: gradle/actions/setup-gradle@v6
+        with: { gradle-version: ${{ env.GRADLE_VERSION }} }
+      - run: gradle clean build --no-daemon -Pmod_version="${{ inputs.release_version || '0.1.0' }}" -Pminecraft_version="${{ matrix.mc }}" -Ploader_version="${{ matrix.loader }}" -Pfabric_api_version="${{ matrix.api }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: netflared-fabric-1.21-${{ matrix.mc }}
+          path: build/libs/*.jar
+          if-no-files-found: error
+
+  build-26:
+    name: Fabric 26.x / ${{ matrix.mc }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { mc: "26.1.1", loader: "0.19.2", api: "0.153.0+26.1.1" }
+          - { mc: "26.1.2", loader: "0.19.2", api: "0.153.1+26.1.2" }
+          - { mc: "26.2", loader: "0.19.3", api: "0.154.0+26.2" }
+    steps:
+      - uses: actions/checkout@v7
+        with: { ref: 26.x }
+      - uses: actions/setup-java@v6
+        with: { distribution: temurin, java-version: "25" }
+      - uses: gradle/actions/setup-gradle@v6
+        with: { gradle-version: ${{ env.GRADLE_VERSION }} }
+      - run: gradle clean build --no-daemon -Pmod_version="${{ inputs.release_version || '0.1.0' }}" -Pminecraft_version="${{ matrix.mc }}" -Ploader_version="${{ matrix.loader }}" -Pfabric_api_version="${{ matrix.api }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: netflared-fabric-26-${{ matrix.mc }}
+          path: build/libs/*.jar
+          if-no-files-found: error
+
+  all-builds:
+    name: All Fabric compatibility builds passed
+    needs: [build-1-20, build-1-21, build-26]
+    if: ${{ always() && needs.build-1-20.result == 'success' && needs.build-1-21.result == 'success' && needs.build-26.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All Fabric compatibility builds passed."
+
+  release-1-20:
+    needs: all-builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { pattern: netflared-fabric-1.20-*, path: release, merge-multiple: true }
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: "v${{ inputs.release_version || '0.1.0' }}-1.20.x"
+          name: "Netflared Server ${{ inputs.release_version || '0.1.0' }} — Fabric 1.20.x"
+          target_commitish: 1.20.x
+          generate_release_notes: true
+          files: release/*.jar
+
+  release-1-21:
+    needs: all-builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { pattern: netflared-fabric-1.21-*, path: release, merge-multiple: true }
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: "v${{ inputs.release_version || '0.1.0' }}-1.21.x"
+          name: "Netflared Server ${{ inputs.release_version || '0.1.0' }} — Fabric 1.21.x"
+          target_commitish: 1.21.x
+          generate_release_notes: true
+          files: release/*.jar
+
+  release-26:
+    needs: all-builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { pattern: netflared-fabric-26-*, path: release, merge-multiple: true }
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: "v${{ inputs.release_version || '0.1.0' }}-26.x"
+          name: "Netflared Server ${{ inputs.release_version || '0.1.0' }} — Fabric 26.x"
+          target_commitish: 26.x
+          generate_release_notes: true
+          files: release/*.jar
