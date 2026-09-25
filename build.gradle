@@ -7,8 +7,8 @@ def api=project.findProperty('fabric_api_version') ?: '0.154.0+26.2'
 java.toolchain.languageVersion=JavaLanguageVersion.of(25)
 dependencies {
  minecraft "com.mojang:minecraft:" + mc
- implementation "net.fabricmc:fabric-loader:" + loader
- implementation "net.fabricmc.fabric-api:fabric-api:" + api
+ modImplementation "net.fabricmc:fabric-loader:" + loader
+ modImplementation "net.fabricmc.fabric-api:fabric-api:" + api
  implementation 'com.google.code.gson:gson:2.13.2'
 }
 processResources {
