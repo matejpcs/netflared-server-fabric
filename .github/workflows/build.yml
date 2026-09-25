@@ -61,7 +61,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: "8.8"
+          gradle-version: "9.5.1"
       - name: Build
         run: gradle clean build --no-daemon --stacktrace --refresh-dependencies -Pminecraft_version="${{ matrix.mc }}" -Ploader_version="${{ matrix.loader }}" -Pfabric_api_version="${{ matrix.api }}"
       - name: Verify JAR
