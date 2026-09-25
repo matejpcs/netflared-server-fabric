@@ -13,6 +13,8 @@ on:
 permissions:
   contents: write
 
+# All compatibility branches must build before the release job runs.
+
 jobs:
   build:
     name: Build ${{ matrix.label }}
