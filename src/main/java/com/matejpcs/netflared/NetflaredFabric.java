@@ -12,7 +12,7 @@ public final class NetflaredFabric implements ModInitializer {
  private NetflaredCore core; private MinecraftServer server;
  @Override public void onInitialize() {
   CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(Commands.literal("netflared")
-   .requires(source -> source.hasPermission(4))
+   .requires(source -> source.permissions().hasPermission(new net.minecraft.server.permissions.Permission.HasCommandLevel(net.minecraft.server.permissions.PermissionLevel.byId(4))))
    .executes(context->{run(context.getSource(),new String[0]);return 1;})
    .then(Commands.literal("status").executes(context->{run(context.getSource(),new String[]{"status"});return 1;}))
    .then(Commands.literal("info").executes(context->{run(context.getSource(),new String[]{"info"});return 1;}))
