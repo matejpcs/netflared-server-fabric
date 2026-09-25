@@ -150,7 +150,7 @@ jobs:
           name: fabric-${{ matrix.version }}
           path: netflared-server-fabric-${{ matrix.version }}.jar
   release:
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
     name: Release Fabric ${{ matrix.group }}
     needs: build
     runs-on: ubuntu-latest
@@ -165,8 +165,8 @@ jobs:
           merge-multiple: true
       - uses: softprops/action-gh-release@v3
         with:
-          tag_name: v${{ inputs.release_version }}-fabric-${{ matrix.group }}
-          name: Netflared Server ${{ inputs.release_version }} — Fabric ${{ matrix.group }}
+          tag_name: v${{ inputs.release_version || '0.1.13' }}-fabric-${{ matrix.group }}
+          name: Netflared Server ${{ inputs.release_version || '0.1.13' }} — Fabric ${{ matrix.group }}
           generate_release_notes: false
           files: grouped/*.jar
 
