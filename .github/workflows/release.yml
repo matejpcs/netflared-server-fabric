@@ -138,7 +138,7 @@ jobs:
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: ${{ env.GRADLE_VERSION }}
+          gradle-version: "8.14.3"
       - name: Build and test
         run: |
           gradle clean build --no-daemon -Pmod_version="${{ inputs.release_version || '0.1.0' }}" -Pminecraft_version="${{ matrix.mc }}" -Ploader_version="${{ matrix.loader }}" -Pfabric_api_version="${{ matrix.api }}"
@@ -177,7 +177,7 @@ jobs:
           java-version: "25"
       - uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: ${{ env.GRADLE_VERSION }}
+          gradle-version: "9.7.1"
       - name: Build and test
         run: |
           gradle clean build --no-daemon -Pmod_version="${{ inputs.release_version || '0.1.0' }}" -Pminecraft_version="${{ matrix.mc }}" -Ploader_version="${{ matrix.loader }}" -Pfabric_api_version="${{ matrix.api }}"
