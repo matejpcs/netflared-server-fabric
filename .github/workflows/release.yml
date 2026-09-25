@@ -1,23 +1,19 @@
-name: Build & Release Fabric compatibility bundles
+name: Build & Release Fabric versions
 
 on:
-  push:
-    branches: ["main"]
   workflow_dispatch:
     inputs:
       release_version:
         description: Release version
         required: true
-        default: "0.1.12"
+        default: "0.1.13"
 
 permissions:
   contents: write
 
-# All compatibility branches must build before the release job runs.
-
 jobs:
-  build:
-    name: Build ${{ matrix.label }}
+  build-and-release:
+    name: Release ${{ matrix.label }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -30,7 +26,6 @@ jobs:
             api: "0.100.8+1.20.6"
             java: "21"
             gradle: "9.5.1"
-            artifact: "netflared-fabric-1.20.6"
           - label: "Fabric 1.21.11"
             ref: "1.21.x"
             mc: "1.21.11"
@@ -38,7 +33,6 @@ jobs:
             api: "0.141.6+1.21.11"
             java: "21"
             gradle: "9.7.1"
-            artifact: "netflared-fabric-1.21.11"
           - label: "Fabric 26.2"
             ref: "26.x"
             mc: "26.2"
@@ -46,7 +40,6 @@ jobs:
             api: "0.154.0+26.2"
             java: "25"
             gradle: "9.7.1"
-            artifact: "netflared-fabric-26.2"
     steps:
       - uses: actions/checkout@v7
         with:
@@ -59,7 +52,7 @@ jobs:
         with:
           gradle-version: ${{ matrix.gradle }}
       - name: Build
-        run: gradle clean build --no-daemon --stacktrace --refresh-dependencies -Pmod_version="0.1.12" -Pminecraft_version="${{ matrix.mc }}" -Ploader_version="${{ matrix.loader }}" -Pfabric_api_version="${{ matrix.api }}"
+        run: gradle clean build --no-daemon --stacktrace --refresh-dependencies -Pmod_version="${{ inputs.release_version }}" -Pminecraft_version="${{ matrix.mc }}" -Ploader_version="${{ matrix.loader }}" -Pfabric_api_version="${{ matrix.api }}"
       - name: Verify JAR
         run: |
           set -euo pipefail
@@ -67,24 +60,11 @@ jobs:
           jars=(build/libs/*.jar)
           test "${#jars[@]}" -gt 0
           printf '%s\n' "${jars[@]}"
-      - uses: actions/upload-artifact@v6
+      - name: Release version
+        uses: softprops/action-gh-release@v3
         with:
-          name: ${{ matrix.artifact }}
-          path: build/libs/*.jar
-          if-no-files-found: error
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          path: release
-          merge-multiple: true
-      - uses: softprops/action-gh-release@v3
-        with:
-          tag_name: "v${{ inputs.release_version || '0.1.12' }}"
-          name: "Netflared Server ${{ inputs.release_version || '0.1.12' }} — Fabric"
-          target_commitish: main
-          generate_release_notes: true
-          files: release/*.jar
+          tag_name: "v${{ inputs.release_version }}-fabric-${{ matrix.mc }}"
+          name: "Netflared Server ${{ inputs.release_version }} — fabric ${{ matrix.mc }}"
+          target_commitish: ${{ matrix.ref }}
+          generate_release_notes: false
+          files: build/libs/*.jar
