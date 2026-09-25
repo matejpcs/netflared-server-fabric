@@ -10,92 +10,24 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: netflared-fabric-1-21-x
-  cancel-in-progress: true
-
 jobs:
   build:
-    name: Fabric ${{ matrix.mc }}
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - mc: "1.21"
-            loader: "0.16.14"
-            api: "0.100.8+1.21"
-            java: "21"
-          - mc: "1.21.1"
-            loader: "0.16.14"
-            api: "0.115.6+1.21.1"
-            java: "21"
-          - mc: "1.21.2"
-            loader: "0.16.14"
-            api: "0.106.1+1.21.2"
-            java: "21"
-          - mc: "1.21.3"
-            loader: "0.16.14"
-            api: "0.114.1+1.21.3"
-            java: "21"
-          - mc: "1.21.4"
-            loader: "0.16.14"
-            api: "0.119.4+1.21.4"
-            java: "21"
-          - mc: "1.21.5"
-            loader: "0.16.14"
-            api: "0.128.0+1.21.5"
-            java: "21"
-          - mc: "1.21.6"
-            loader: "0.17.0"
-            api: "0.128.2+1.21.6"
-            java: "21"
-          - mc: "1.21.7"
-            loader: "0.17.0"
-            api: "0.129.0+1.21.7"
-            java: "21"
-          - mc: "1.21.8"
-            loader: "0.17.2"
-            api: "0.136.1+1.21.8"
-            java: "21"
-          - mc: "1.21.9"
-            loader: "0.17.3"
-            api: "0.134.0+1.21.9"
-            java: "21"
-          - mc: "1.21.10"
-            loader: "0.17.3"
-            api: "0.135.0+1.21.10"
-            java: "21"
-          - mc: "1.21.11"
-            loader: "0.18.4"
-            api: "0.141.6+1.21.11"
-            java: "21"
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Set up Java
-        uses: actions/setup-java@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: "${{ matrix.java }}"
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: "9.5.1"
+          gradle-version: "8.14.3"
       - name: Build
-        run: gradle clean build --no-daemon --stacktrace --refresh-dependencies -Pminecraft_version="${{ matrix.mc }}" -Ploader_version="${{ matrix.loader }}" -Pfabric_api_version="${{ matrix.api }}"
+        run: gradle clean build --no-daemon --stacktrace --refresh-dependencies -Pminecraft_version="1.21.11" -Ploader_version="0.18.4" -Pfabric_api_version="0.141.6+1.21.11"
       - name: Verify JAR
-        shell: bash
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          jars=(build/libs/*.jar)
-          test "${#jars[@]}" -gt 0
-          printf '%s
-' "${jars[@]}"
-      - name: Upload JAR
-        uses: actions/upload-artifact@v6
+        run: test -n "$(find build/libs -maxdepth 1 -name '*.jar' -print -quit)"
+      - uses: actions/upload-artifact@v6
         with:
-          name: netflared-fabric-1-21-x
+          name: netflared-fabric-1.21.11
           path: build/libs/*.jar
           if-no-files-found: error
