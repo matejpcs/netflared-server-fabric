@@ -1,5 +1,7 @@
 name: Build & Release Fabric all versions
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       release_version:
@@ -126,7 +128,7 @@ jobs:
       - name: Build
         env:
           VERSION: ${{ matrix.version }}
-          RELEASE_VERSION: ${{ inputs.release_version }}
+          RELEASE_VERSION: ${{ inputs.release_version || '0.1.13' }}
           LOADER_VERSION: ${{ steps.deps.outputs.loader }}
           FABRIC_API_VERSION: ${{ steps.deps.outputs.api }}
         run: |
@@ -140,6 +142,7 @@ jobs:
           name: fabric-${{ matrix.version }}
           path: netflared-server-fabric-${{ matrix.version }}.jar
   release:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     name: Release Fabric ${{ matrix.group }}
     needs: build
     runs-on: ubuntu-latest
