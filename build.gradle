@@ -1,9 +1,9 @@
-plugins { id 'net.fabricmc.fabric-loom-remap' version '1.17-SNAPSHOT' }
+plugins { id 'net.fabricmc.fabric-loom-remap' version '1.17.21' }
 group='com.matejpcs.netflared'
-version=project.findProperty('mod_version') ?: '0.1.8-SNAPSHOT'
-def mc=project.findProperty('minecraft_version') ?: '1.20.6'
-def loader=project.findProperty('loader_version') ?: '0.15.11'
-def api=project.findProperty('fabric_api_version') ?: '0.100.8+1.20.6'
+version=project.findProperty('mod_version') ?: '0.1.10-SNAPSHOT'
+def mc=project.findProperty('minecraft_version') ?: '1.21.11'
+def loader=project.findProperty('loader_version') ?: '0.18.4'
+def api=project.findProperty('fabric_api_version') ?: '0.141.6+1.21.11'
 def javaVersion = mc in ['1.20.5','1.20.6'] ? 21 : 17
 java.toolchain.languageVersion=JavaLanguageVersion.of(javaVersion)
 dependencies {
@@ -14,7 +14,7 @@ dependencies {
  implementation 'com.google.code.gson:gson:2.13.2'
 }
 processResources {
- inputs.property 'version', project.version
- filesMatching('fabric.mod.json') { expand(version:project.version) }
+ inputs.properties(version:project.version, minecraft_version:mc, loader_version:loader)
+ filesMatching('fabric.mod.json') { expand(version:project.version, minecraft_version:mc, loader_version:loader) }
 }
 tasks.withType(JavaCompile).configureEach { options.encoding='UTF-8'; options.release=javaVersion }
