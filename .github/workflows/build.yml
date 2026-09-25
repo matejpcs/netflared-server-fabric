@@ -21,7 +21,7 @@ jobs:
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: "8.14.3"
+          gradle-version: "9.7.1"
       - name: Build
         run: gradle clean build --no-daemon --stacktrace --refresh-dependencies -Pminecraft_version="1.21.11" -Ploader_version="0.18.4" -Pfabric_api_version="0.141.6+1.21.11"
       - name: Verify JAR
