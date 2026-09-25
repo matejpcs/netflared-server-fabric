@@ -35,7 +35,7 @@ jobs:
             loader: "0.18.4"
             api: "0.141.6+1.21.11"
             java: "21"
-            gradle: "8.14.3"
+            gradle: "9.7.1"
             artifact: "netflared-fabric-1.21.11"
           - label: "Fabric 26.2"
             ref: "26.x"
