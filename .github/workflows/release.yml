@@ -1,5 +1,4 @@
 name: Build & Release Fabric all versions
-
 on:
   workflow_dispatch:
     inputs:
@@ -7,10 +6,8 @@ on:
         description: Release version
         required: true
         default: "0.1.13"
-
 permissions:
   contents: write
-
 jobs:
   build:
     name: Build Fabric ${{ matrix.version }}
@@ -21,48 +18,88 @@ jobs:
         include:
           - version: "1.20"
             group: "1.20"
+            java: "17"
+            gradle: "8.8"
           - version: "1.20.1"
             group: "1.20"
+            java: "17"
+            gradle: "8.8"
           - version: "1.20.2"
             group: "1.20"
+            java: "17"
+            gradle: "8.8"
           - version: "1.20.3"
             group: "1.20"
+            java: "17"
+            gradle: "8.8"
           - version: "1.20.4"
             group: "1.20"
+            java: "17"
+            gradle: "8.8"
           - version: "1.20.5"
             group: "1.20"
+            java: "21"
+            gradle: "8.14.3"
           - version: "1.20.6"
             group: "1.20"
+            java: "21"
+            gradle: "8.14.3"
           - version: "1.21"
             group: "1.21"
+            java: "21"
+            gradle: "9.5.1"
           - version: "1.21.1"
             group: "1.21"
+            java: "21"
+            gradle: "9.5.1"
           - version: "1.21.2"
             group: "1.21"
+            java: "21"
+            gradle: "9.5.1"
           - version: "1.21.3"
             group: "1.21"
+            java: "21"
+            gradle: "9.5.1"
           - version: "1.21.4"
             group: "1.21"
+            java: "21"
+            gradle: "9.5.1"
           - version: "1.21.5"
             group: "1.21"
+            java: "21"
+            gradle: "9.5.1"
           - version: "1.21.6"
             group: "1.21"
+            java: "21"
+            gradle: "9.5.1"
           - version: "1.21.7"
             group: "1.21"
+            java: "21"
+            gradle: "9.5.1"
           - version: "1.21.8"
             group: "1.21"
+            java: "21"
+            gradle: "9.5.1"
           - version: "1.21.9"
             group: "1.21"
+            java: "21"
+            gradle: "9.5.1"
           - version: "1.21.10"
             group: "1.21"
+            java: "21"
+            gradle: "9.5.1"
           - version: "1.21.11"
             group: "1.21"
-          - version: "26.0"
-            group: "26"
+            java: "21"
+            gradle: "9.5.1"
           - version: "26.1"
             group: "26"
+            java: "25"
+            gradle: "9.5.1"
           - version: "26.2"
             group: "26"
+            java: "25"
+            gradle: "9.5.1"
     steps:
       - uses: actions/checkout@v7
         with:
@@ -70,37 +107,38 @@ jobs:
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: ${{ startsWith(matrix.version, '26.') && '25' || ((matrix.version == '1.20.5' || matrix.version == '1.20.6' || startsWith(matrix.version, '1.21')) && '21' || '17') }}
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: ${{ matrix.group == '1.20' && '9.5.1' || '9.7.1' }}
+          gradle-version: ${{ matrix.gradle }}
+      - name: Resolve Fabric versions
+        id: deps
+        env:
+          VERSION: ${{ matrix.version }}
+        run: |
+          set -euo pipefail
+          loader="$(curl -fsSL "https://meta.fabricmc.net/v2/versions/loader/$VERSION" | jq -r '.[0].loader.version // empty')"
+          api="$(curl -fsSLG "https://api.modrinth.com/v2/project/P7dR8mSH/version" --data-urlencode "game_versions=[\"$VERSION\"]" --data-urlencode 'loaders=["fabric"]' | jq -r 'map(select(.status == "listed")) | .[0].version_number // empty')"
+          test -n "$loader" && test "$loader" != "null"
+          test -n "$api" && test "$api" != "null"
+          echo "loader=$loader" >> "$GITHUB_OUTPUT"
+          echo "api=$api" >> "$GITHUB_OUTPUT"
       - name: Build
         env:
           VERSION: ${{ matrix.version }}
           RELEASE_VERSION: ${{ inputs.release_version }}
+          LOADER_VERSION: ${{ steps.deps.outputs.loader }}
+          FABRIC_API_VERSION: ${{ steps.deps.outputs.api }}
         run: |
           set -euo pipefail
-          api=$(curl -fsSL https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/ | grep -oE 'href="[^"]+\+'"$VERSION"'/"' | sed -E 's/href="([^"]+)"/\1/' | sed 's#/$##' | sort -V | tail -1)
-          test -n "$api"
-          case "$VERSION" in
-            1.20|1.20.1|1.20.2|1.20.3|1.20.4|1.20.5|1.20.6) loader=0.15.11 ;;
-            1.21|1.21.1|1.21.2|1.21.3|1.21.4|1.21.5) loader=0.16.10 ;;
-            1.21.6|1.21.7|1.21.8) loader=0.17.2 ;;
-            1.21.9|1.21.10) loader=0.18.0 ;;
-            1.21.11) loader=0.18.4 ;;
-            26.1) loader=0.19.4 ;;
-            26.2) loader=0.19.5 ;;
-            *) exit 1 ;;
-          esac
-          gradle clean build --no-daemon --stacktrace --refresh-dependencies -Pmod_version="$RELEASE_VERSION" -Pminecraft_version="$VERSION" -Ploader_version="$loader" -Pfabric_api_version="$api"
-          jar=$(find build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*sources*' | head -n1)
+          gradle clean build --no-daemon --stacktrace --refresh-dependencies -Pmod_version="$RELEASE_VERSION" -Pminecraft_version="$VERSION" -Ploader_version="$LOADER_VERSION" -Pfabric_api_version="$FABRIC_API_VERSION"
+          jar="$(find build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*sources*' | head -n1)"
           test -n "$jar"
           cp "$jar" "netflared-server-fabric-$VERSION.jar"
       - uses: actions/upload-artifact@v4
         with:
           name: fabric-${{ matrix.version }}
           path: netflared-server-fabric-${{ matrix.version }}.jar
-
   release:
     name: Release Fabric ${{ matrix.group }}
     needs: build
