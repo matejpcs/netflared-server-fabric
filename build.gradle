@@ -1,10 +1,22 @@
-plugins { id 'net.fabricmc.fabric-loom' version '1.16.2' }
+plugins { id 'net.fabricmc.fabric-loom' version '1.17.21' }
 group='com.matejpcs.netflared'
-version=project.findProperty('mod_version') ?: '0.1.4-SNAPSHOT'
+version=project.findProperty('mod_version') ?: '0.1.7-SNAPSHOT'
 def mc=project.findProperty('minecraft_version') ?: '26.2'
 def loader=project.findProperty('loader_version') ?: '0.19.3'
 def api=project.findProperty('fabric_api_version') ?: '0.154.0+26.2'
 java.toolchain.languageVersion=JavaLanguageVersion.of(25)
-dependencies { minecraft "com.mojang:minecraft:" + mc; modImplementation "net.fabricmc:fabric-loader:" + loader; modImplementation "net.fabricmc.fabric-api:fabric-api:" + api; implementation 'com.google.code.gson:gson:2.13.2' }
-processResources { inputs.property 'version',project.version; filesMatching('fabric.mod.json'){expand(version:project.version)} }
+dependencies {
+ minecraft "com.mojang:minecraft:" + mc
+ implementation "net.fabricmc:fabric-loader:" + loader
+ implementation "net.fabricmc.fabric-api:fabric-api:" + api
+ implementation 'com.google.code.gson:gson:2.13.2'
+}
+processResources {
+ inputs.property 'version', project.version
+ inputs.property 'minecraft_version', mc
+ inputs.property 'loader_version', loader
+ filesMatching('fabric.mod.json') {
+  expand(version:project.version, minecraft_version:mc, loader_version:loader)
+ }
+}
 tasks.withType(JavaCompile).configureEach { options.encoding='UTF-8'; options.release=25 }
